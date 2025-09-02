@@ -1,17 +1,17 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers, validators
+from django.contrib.auth.password_validation import validate_password
 
 class RegisterSerializer(serializers.ModelSerializer):
-    # Campo para confirmação de senha. Não será salvo no banco de dados.
     password2 = serializers.CharField(style={'input_type': 'password'}, write_only=True)
 
     class Meta:
         model = User
-        # Lista de campos que serão usados para o registro e retornados na resposta.
+        
         fields = ('id', 'username', 'email', 'password', 'password2')
         extra_kwargs = {
-            'id': {'read_only': True}, # O ID será apenas para leitura
-            'password': {'write_only': True}, # A senha principal não será retornada
+            'id': {'read_only': True}, 
+            'password': {'write_only': True}, 
             'email': {
                 'required': True,
                 'allow_blank': False,
@@ -31,23 +31,18 @@ class RegisterSerializer(serializers.ModelSerializer):
         }
 
     def validate(self, attrs):
-        """
-        Este método é chamado para validar os dados do serializer.
-        Vamos usá-lo para comparar as senhas.
-        """
         if attrs['password'] != attrs['password2']:
             raise serializers.ValidationError({"password": "As senhas não são idênticas."})
+        try:
+            validate_password(attrs['password'], user=User(**attrs))
+        except serializers.ValidationError as e:
+            raise serializers.ValidationError({"password": list(e.messages)})
         return attrs
 
     def create(self, validated_data):
-        """
-        Este método é chamado quando a validação passa e um novo usuário
-        precisa ser criado.
-        """
-        # Removemos o campo 'password2' pois ele não existe no modelo User
+
         validated_data.pop('password2')
         
-        # Usamos **validated_data para passar os argumentos para create_user
         user = User.objects.create_user(**validated_data)
         
         return user
