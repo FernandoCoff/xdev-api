@@ -5,10 +5,12 @@ from .views import ProfileDetailView
 from .views import ProfileFollowView
 from .views import ProfileUpdateView
 from .views import ProfilePictureUpdateView
+from .views import MyProfileView
 
 urlpatterns = [
     path('register/', RegisterView.as_view(), name='auth_register'),
     path('login/', LoginView.as_view(), name='auth_login'),
+    path('profile/me/', MyProfileView.as_view(), name='my_profile'),
     path('profile/<str:username>/', ProfileDetailView.as_view(), name='profile_detail'),
     path('profile/<str:username>/follow/', ProfileFollowView.as_view(), name='profile_follow'),
     path('profile/me/update/', ProfileUpdateView.as_view(), name='profile_update'),

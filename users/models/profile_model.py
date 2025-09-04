@@ -1,7 +1,7 @@
-import random # Para escolher a cor
-import requests # Para baixar a imagem
-from io import BytesIO # Para manipular os dados da imagem em memória
-
+import random 
+import requests 
+from io import BytesIO 
+import os
 from django.db import models
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
@@ -14,10 +14,23 @@ PASTEL_COLORS = [
     'FFDAB9', 'B0E0E6', 'FFDEAD', 'DDA0DD', '87CEFA'
 ]
 
+def user_profile_picture_path(instance, filename):
+    """
+    Gera um caminho para o arquivo de foto de perfil, garantindo que seja único.
+    Ex: 'profile_pics/username.jpg'
+    """
+    # Pega a extensão do arquivo (ex: .jpg, .png)
+    ext = os.path.splitext(filename)[1]
+    # Cria um novo nome de arquivo usando o username do usuário
+    new_filename = f"{instance.user.username}{ext}"
+    
+    # Retorna o caminho completo, ex: 'profile_pics/filister.jpg'
+    return os.path.join('profile_pics', new_filename)
+
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     profile_picture = models.ImageField(
-        upload_to='profile_pics',
+        upload_to= user_profile_picture_path,
         null=True,
         blank=True
     )
@@ -52,7 +65,7 @@ def create_user_profile(sender, instance, created, **kwargs):
             response.raise_for_status() 
 
             image_data = BytesIO(response.content)
-            file_name = f'{username}_default.png'
+            file_name = f'{username}_default.svg'
             profile.profile_picture.save(file_name, ContentFile(image_data.read()), save=True)
 
         except requests.exceptions.RequestException as e:

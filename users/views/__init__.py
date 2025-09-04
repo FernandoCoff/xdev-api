@@ -4,3 +4,4 @@ from .profile_view import ProfileDetailView
 from .profile_view import ProfileFollowView
 from .profile_view import ProfileUpdateView
 from .profile_view import ProfilePictureUpdateView
+from .profile_me import MyProfileView

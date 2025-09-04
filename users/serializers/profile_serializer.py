@@ -6,16 +6,17 @@ from ..models.profile_model import Profile
 class BasicUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('id', 'username')
+        fields = ('id', 'username', 'email')
 
 
 class ProfileSerializer(serializers.ModelSerializer):
     
     user = BasicUserSerializer(read_only=True)
-    
 
     follows = serializers.SerializerMethodField()
     followed_by = serializers.SerializerMethodField()
+    follows_count = serializers.SerializerMethodField()
+    followed_by_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Profile

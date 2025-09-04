@@ -8,6 +8,7 @@ from django.contrib.auth.models import User
 
 from ..models.profile_model import Profile
 from ..serializers.profile_serializer import ProfileSerializer
+from rest_framework import permissions
 
 class ProfileDetailView(APIView):
     permission_classes = [IsAuthenticated]
@@ -51,16 +52,41 @@ from ..serializers.profile_serializer import ProfileUpdateSerializer, ProfilePic
 class ProfileUpdateView(generics.UpdateAPIView):
     
     serializer_class = ProfileUpdateSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated]
 
     def get_object(self):
         return self.request.user
 
+    # --- ADICIONE/SOBRESREVA O MÉTODO 'update' ---
+    def update(self, request, *args, **kwargs):
+        # Primeiro, executa a lógica de atualização padrão para salvar os dados
+        super().update(request, *args, **kwargs)
+        
+        # Em seguida, pega a instância do usuário atualizado
+        instance = self.get_object()
+        
+        # E retorna uma resposta formatada com o ProfileSerializer completo
+        profile_data = ProfileSerializer(instance.profile, context={'request': request}).data
+        return Response(profile_data)
 
 class ProfilePictureUpdateView(generics.UpdateAPIView):
     serializer_class = ProfilePictureUpdateSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated]
+    
+    # --- ADICIONE ESTA LINHA ---
     parser_classes = [MultiPartParser, FormParser]
-
+    
     def get_object(self):
         return self.request.user.profile
+
+    def update(self, request, *args, **kwargs):
+        print("\n" + "="*50)
+        print("DENTRO DA ProfilePictureUpdateView")
+        print("Conteúdo de request.data:", request.data)
+        print("Conteúdo de request.FILES:", request.FILES)
+        print("="*50 + "\n")
+        super().update(request, *args, **kwargs)
+        
+        instance = self.get_object()
+        profile_data = ProfileSerializer(instance, context={'request': request}).data
+        return Response(profile_data)
