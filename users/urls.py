@@ -1,11 +1,20 @@
-from django.urls import path
-from .views import RegisterView
-from .views import LoginView
-from .views import ProfileDetailView
-from .views import ProfileFollowView
-from .views import ProfileUpdateView
-from .views import ProfilePictureUpdateView
-from .views import MyProfileView
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from .views import (
+    RegisterView,
+    LoginView,
+    ProfileDetailView,
+    ProfileFollowView,
+    ProfileUpdateView,
+    ProfilePictureUpdateView,
+    MyProfileView,
+    ProfileViewSet 
+)
+
+
+router = DefaultRouter()
+router.register(r'profiles', ProfileViewSet, basename='profile-search')
+
 
 urlpatterns = [
     path('register/', RegisterView.as_view(), name='auth_register'),
@@ -15,4 +24,5 @@ urlpatterns = [
     path('profile/<str:username>/follow/', ProfileFollowView.as_view(), name='profile_follow'),
     path('profile/me/update/', ProfileUpdateView.as_view(), name='profile_update'),
     path('profile/me/update-picture/', ProfilePictureUpdateView.as_view(), name='profile_update_picture'),
+    path('', include(router.urls)),
 ]

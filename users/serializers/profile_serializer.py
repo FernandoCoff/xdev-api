@@ -1,6 +1,8 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
+from django.contrib.auth.password_validation import validate_password
 from ..models.profile_model import Profile 
+from posts.models import Post 
 
 
 class BasicUserSerializer(serializers.ModelSerializer):
@@ -8,15 +10,30 @@ class BasicUserSerializer(serializers.ModelSerializer):
         model = User
         fields = ('id', 'username', 'email')
 
+# 1. Criei um novo serializer específico para as listas de seguidores/seguindo
+class FollowListSerializer(serializers.ModelSerializer):
+    """
+    Serializer para exibir o usuário e a foto de perfil nas listas.
+    """
+    user = BasicUserSerializer(read_only=True)
+
+    class Meta:
+        model = Profile
+        fields = ('user', 'profile_picture')
+
 
 class ProfileSerializer(serializers.ModelSerializer):
     
     user = BasicUserSerializer(read_only=True)
 
+    # Estes campos agora usarão o FollowListSerializer
     follows = serializers.SerializerMethodField()
     followed_by = serializers.SerializerMethodField()
+    
     follows_count = serializers.SerializerMethodField()
     followed_by_count = serializers.SerializerMethodField()
+    is_following = serializers.SerializerMethodField()
+    post_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Profile
@@ -26,30 +43,38 @@ class ProfileSerializer(serializers.ModelSerializer):
             'follows',
             'followed_by',
             'follows_count', 
-            'followed_by_count' 
+            'followed_by_count',
+            'is_following',
+            'post_count'
         )
     
+    def get_is_following(self, obj):
+        request = self.context.get('request')
+        if not request or not request.user.is_authenticated:
+            return False
+        return request.user.profile.follows.filter(pk=obj.pk).exists()
+
+    # 2. Atualizei a função para usar o novo FollowListSerializer
     def get_follows(self, obj):
         profiles_followed = obj.follows.all()
-        users = [profile.user for profile in profiles_followed]
-        return BasicUserSerializer(users, many=True).data
+        # Passamos o 'context' para que o serializer tenha acesso ao 'request' se necessário
+        return FollowListSerializer(profiles_followed, many=True, context=self.context).data
 
+    # 3. Atualizei esta função também
     def get_followed_by(self, obj):
         profiles_followers = obj.followed_by.all()
-        users = [profile.user for profile in profiles_followers]
-        return BasicUserSerializer(users, many=True).data
+        return FollowListSerializer(profiles_followers, many=True, context=self.context).data
 
-    # Adiciona campos de contagem para facilitar a vida do frontend
     def get_follows_count(self, obj):
         return obj.follows.count()
 
     def get_followed_by_count(self, obj):
         return obj.followed_by.count()
     
-    from rest_framework import serializers
-from django.contrib.auth.models import User
-from django.contrib.auth.password_validation import validate_password
-from ..models.profile_model import Profile
+    def get_post_count(self, obj):
+        # CORREÇÃO: Revertido para a consulta direta, que é mais robusta.
+        return Post.objects.filter(author=obj.user).count()
+    
 
 class ProfileUpdateSerializer(serializers.Serializer):
     username = serializers.CharField(required=False)
@@ -93,3 +118,4 @@ class ProfilePictureUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
         fields = ('profile_picture',)
+
