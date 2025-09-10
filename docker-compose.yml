@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: postgres_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_USER=xdevuser
+      - POSTGRES_PASSWORD=xdevpassword
+      - POSTGRES_DB=xdevdb
+    ports:
+      - "5432:5432" 
+
+
+  web:
+    build: .
+    container_name: django_web
+    command: gunicorn xdev.wsgi:application --bind 0.0.0.0:8000
+    volumes:
+      - media_volume:/app/media
+    ports:
+      - "8000:8000"
+    environment:
+      - SECRET_KEY=sua-secret-key-super-segura-aqui
+      - DEBUG=1
+      - DATABASE_URL=postgres://xdevuser:xdevpassword@db:5432/xdevdb
+      # Adicione a origem do seu frontend aqui quando souber
+      - CORS_ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
+    depends_on:
+      - db
+
+volumes:
+  postgres_data:
+  media_volume:

@@ -10,9 +10,11 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
-from pathlib import Path
 import os
-
+from pathlib import Path
+import dj_database_url
+from dotenv import load_dotenv
+load_dotenv()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -21,12 +23,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-a63vpg+3ny$oy@-j*a!oqdl_+487k-#gd=vq@*aj$%x9@58@h+'
+SECRET_KEY = os.environ.get('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DEBUG', '0') == '1'
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -80,10 +82,7 @@ WSGI_APPLICATION = 'xdev.wsgi.application'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+    'default': dj_database_url.config(default=os.environ.get('DATABASE_URL'))
 }
 
 
@@ -135,10 +134,11 @@ REST_FRAMEWORK = {
 }
 
 # urls permitidas
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",  # Exemplo para Vite/Vue
-    "http://127.0.0.1:5173"
-]
+allowed_origins_str = os.environ.get(
+    'CORS_ALLOWED_ORIGINS_PROD'
+)
+
+CORS_ALLOWED_ORIGINS = allowed_origins_str.split(',')
 
 # Configuração de arquivos de mídia
 MEDIA_URL = '/media/'
