@@ -138,11 +138,17 @@ REST_FRAMEWORK = {
 }
 
 # urls permitidas
-allowed_origins_str = os.environ.get(
-    'CORS_ALLOWED_ORIGINS_PROD'
-)
+CORS_ALLOWED_ORIGINS_STR = os.environ.get('CORS_ALLOWED_ORIGINS_PROD')
+if CORS_ALLOWED_ORIGINS_STR:
+    CORS_ALLOWED_ORIGINS = CORS_ALLOWED_ORIGINS_STR.split(',')
+else:
+    CORS_ALLOWED_ORIGINS = []
 
-CORS_ALLOWED_ORIGINS = allowed_origins_str.split(',')
+CORS_TRUSTED_ORIGINS_STR = os.environ.get('CORS_TRUSTED_ORIGINS_PROD')
+if CORS_TRUSTED_ORIGINS_STR:
+    CORS_TRUSTED_ORIGINS = CORS_TRUSTED_ORIGINS_STR.split(',')
+else:
+    CORS_TRUSTED_ORIGINS = []
 
 # Configuração de arquivos de mídia
 MEDIA_URL = '/media/'
